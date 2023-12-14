@@ -200,6 +200,79 @@ static __constant uint2 const Keccak_f1600_RC[24] = {
         }                                                                  \
     } while (0)
 
+#define KECCAKF_1600_24RND_256(a)                                      \
+    do                                                                     \
+    {                                                                      \
+        const uint2 m0 = a[0] ^ a[5] ^ a[10] ^ a[15] ^ a[20] ^             \
+                         ROTL64_1(a[2] ^ a[7] ^ a[12] ^ a[17] ^ a[22], 1); \
+        const uint2 m1 = a[1] ^ a[6] ^ a[11] ^ a[16] ^ a[21] ^             \
+                         ROTL64_1(a[3] ^ a[8] ^ a[13] ^ a[18] ^ a[23], 1); \
+        const uint2 m4 = a[4] ^ a[9] ^ a[14] ^ a[19] ^ a[24] ^             \
+                         ROTL64_1(a[1] ^ a[6] ^ a[11] ^ a[16] ^ a[21], 1); \
+                                                                           \
+        a[0] ^= m4;                                                        \
+        a[6] ^= m0;                                                        \
+        a[12] ^= m1;                                                       \
+                                                                           \
+        a[1] = ROTL64_2(a[6], 12);                                         \
+        a[2] = ROTL64_2(a[12], 11);                                        \
+                                                                           \
+        a[0] = bitselect(a[0] ^ a[2], a[0], a[1]);                         \
+        a[0] ^= as_uint2(Keccak_f1600_RC[23]);                              \
+    } while (0)
+
+#define KECCAKF_1600_24RND_512(a)                                      \
+    do                                                                     \
+    {                                                                      \
+        const uint2 m0 = a[0] ^ a[5] ^ a[10] ^ a[15] ^ a[20] ^             \
+                         ROTL64_1(a[2] ^ a[7] ^ a[12] ^ a[17] ^ a[22], 1); \
+        const uint2 m1 = a[1] ^ a[6] ^ a[11] ^ a[16] ^ a[21] ^             \
+                         ROTL64_1(a[3] ^ a[8] ^ a[13] ^ a[18] ^ a[23], 1); \
+        const uint2 m2 = a[2] ^ a[7] ^ a[12] ^ a[17] ^ a[22] ^             \
+                         ROTL64_1(a[4] ^ a[9] ^ a[14] ^ a[19] ^ a[24], 1); \
+        const uint2 m3 = a[3] ^ a[8] ^ a[13] ^ a[18] ^ a[23] ^             \
+                         ROTL64_1(a[0] ^ a[5] ^ a[10] ^ a[15] ^ a[20], 1); \
+        const uint2 m4 = a[4] ^ a[9] ^ a[14] ^ a[19] ^ a[24] ^             \
+                         ROTL64_1(a[1] ^ a[6] ^ a[11] ^ a[16] ^ a[21], 1); \
+                                                                           \
+                                                                           \
+        a[0] ^= m4;                                                        \
+        a[10] ^= m4;                                                       \
+                                                                           \
+        a[6] ^= m0;                                                        \
+        a[16] ^= m0;                                                       \
+                                                                           \
+        a[12] ^= m1;                                                       \
+        a[22] ^= m1;                                                       \
+                                                                           \
+        a[3] ^= m2;                                                        \
+        a[18] ^= m2;                                                       \
+                                                                           \
+        a[9] ^= m3;                                                        \
+        a[24] ^= m3;                                                       \
+                                                                           \
+        a[1] = ROTL64_2(a[6], 12);                                         \
+        a[6] = ROTL64_1(a[9], 20);                                         \
+        a[9] = ROTL64_2(a[22], 29);                                        \
+        a[2] = ROTL64_2(a[12], 11);                                        \
+        a[4] = ROTL64_1(a[24], 14);                                        \
+        a[8] = ROTL64_2(a[16], 13);                                        \
+        a[5] = ROTL64_1(a[3], 28);                                         \
+        a[3] = ROTL64_1(a[18], 21);                                        \
+        a[7] = ROTL64_1(a[10], 3);                                         \
+                                                                           \
+        uint2 m5 = a[0];                                                   \
+        uint2 m6 = a[1];                                                   \
+        a[0] = bitselect(a[0] ^ a[2], a[0], a[1]);                         \
+        a[0] ^= as_uint2(Keccak_f1600_RC[i]);                              \                                                               \
+        a[1] = bitselect(a[1] ^ a[3], a[1], a[2]);                         \
+        a[2] = bitselect(a[2] ^ a[4], a[2], a[3]);                         \
+        a[3] = bitselect(a[3] ^ m5, a[3], a[4]);                           \
+        a[4] = bitselect(a[4] ^ m6, a[4], m5);                             \
+        a[5] = bitselect(a[5] ^ a[7], a[5], a[6]);                         \
+        a[6] = bitselect(a[6] ^ a[8], a[6], a[7]);                         \
+        a[7] = bitselect(a[7] ^ a[9], a[7], a[8]);                         \
+    } while (0)
 
 #define KECCAK_PROCESS(st, in_size, out_size)    \
     do                                           \
@@ -210,8 +283,27 @@ static __constant uint2 const Keccak_f1600_RC[24] = {
             KECCAKF_1600_RND(st, r, os);         \
         }                                        \
     } while (0)
+     
+#define KECCAK_PROCESS_256(st)    \
+    do                                           \
+    {                                            \
+        for (int r = 0; r < 23; ++r)             \
+        {                                        \
+            KECCAKF_1600_RND(st, r, 25);         \
+        }                                        \
+	KECCAKF_1600_24RND_256(st);        \
+    } while (0)
 
-
+#define KECCAK_PROCESS_512(st)    \
+    do                                           \
+    {                                            \
+        for (int r = 0; r < 23; ++r)             \
+        {                                        \
+            KECCAKF_1600_RND(st, r, 25);         \
+        }                                        \
+	KECCAKF_1600_24RND_512(st);        \
+    } while (0)
+   
 typedef union
 {
     uint uints[128 / sizeof(uint)];
@@ -298,8 +390,7 @@ __attribute__((reqd_work_group_size(WORKSIZE, 1, 1))) __kernel void search(
     state[24] = (uint2)(0);
     
     // Process Keccak-512
-    KECCAK_PROCESS(state, 25, 8);
-    //keccak_ash(state);
+    KECCAK_PROCESS_512(state);
 
     state[8] = as_uint2(0x0000000000000001UL);
     state[9] = (uint2)(0);
@@ -320,8 +411,7 @@ __attribute__((reqd_work_group_size(WORKSIZE, 1, 1))) __kernel void search(
     state[24] = (uint2)(0);
 
     // Process Keccak-256
-    KECCAK_PROCESS(state, 25, 8);
-    //keccak_ash(state);
+    KECCAK_PROCESS_256(state);
    
     if (get_local_id(0) == 0)
         atomic_inc(&g_output->hashCount);
@@ -335,6 +425,7 @@ __attribute__((reqd_work_group_size(WORKSIZE, 1, 1))) __kernel void search(
 	// g_output->sol_hea = as_long(as_uchar8(state[0]).s76543210);
     }
 }
+
 
 static void SHA3_512(uint2* s)
 {
