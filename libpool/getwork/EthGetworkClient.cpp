@@ -358,7 +358,7 @@ void EthGetworkClient::processResponse(Json::Value& JRes) {
                 newWp.boundary = h256(JPrm.get(Json::Value::ArrayIndex(2), "").asString());
                 newWp.job = newWp.header.hex();
 
-                //cnote << "Header: " << newWp.header << "Difficulty: " << newWp.boundary << "Job: " << newWp.job;
+                //cnote << "Header: " << newWp.header << " Difficulty: " << newWp.boundary << " Job: " << newWp.job;
 
                 if (m_current.header != newWp.header) {
                     m_current = newWp;

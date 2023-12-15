@@ -242,12 +242,15 @@ CLMiner::~CLMiner() {
 // frkhash.cl
 
 struct SearchResults {
+    struct
+    {
+        uint32_t gid;
+        //uint64_t sol_targ;
+        //uint64_t sol_hea;
+    } rslt[c_maxSearchResults];
     uint32_t count;
     uint32_t hashCount;
     uint32_t abort;
-    uint32_t gid[c_maxSearchResults];
-    ulong targ;
-    ulong hea;
 };
 
 //const static uint32_t zerox3[3] = {0, 0, 0};
@@ -270,12 +273,30 @@ void CLMiner::workLoop() {
             // Read results.
             SearchResults results;
 
-            if (m_queue.size()) {
-                // synchronize and read the results.
-                m_queue[0].enqueueReadBuffer(m_searchBuffer[0], CL_TRUE, 0, sizeof(results), (void*)&results);
-                // clear the solution count, hash count, and abort flag
-                m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE, 0, sizeof(zerox3), zerox3);
-            } else
+            if (m_queue.size())
+            {
+                // no need to read the abort flag.
+                m_queue[0].enqueueReadBuffer(m_searchBuffer[0], CL_TRUE,
+                    offsetof(SearchResults, count), 2 * sizeof(results.count), (void*)&results.count);
+                if (results.count)
+                {
+                    if (results.count > c_maxSearchResults) {
+                        results.count = c_maxSearchResults;
+                    }
+cnote << "RECEIVED RESULTS: " << results.count;
+                    m_queue[0].enqueueReadBuffer(m_searchBuffer[0], CL_TRUE, 0,
+                        results.count * sizeof(results.rslt[0]), (void*)&results);
+
+                    // Reset search buffer if any solution found.
+                    m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE,
+                        offsetof(SearchResults, count), sizeof(results.count), zerox3);                    
+                }
+                // clean the solution count, hash count, and abort flag
+                //    m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE,
+                //        offsetof(SearchResults, count), sizeof(zerox3), zerox3);
+		m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE, offsetof(SearchResults, hashCount), sizeof(results.hashCount), zerox3);
+            }
+            else
                 results.count = 0;
 
             // Wait for work or 3 seconds (whichever the first)
@@ -305,8 +326,7 @@ void CLMiner::workLoop() {
                 m_queue[0].enqueueWriteBuffer(m_header[0], CL_FALSE, 0, w.header.size, w.header.data());
 
                 // zero the result count
-                m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE, offsetof(SearchResults, count), sizeof(zerox3),
-                                            zerox3);
+                m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE, offsetof(SearchResults, count), sizeof(zerox3), zerox3);
                 // Upper 64 bits of the boundary.
                 const uint64_t target = (uint64_t)(u64)((u256)w.boundary >> 192);
                 assert(target > 0);
@@ -339,12 +359,19 @@ void CLMiner::workLoop() {
             if (results.count > c_maxSearchResults)
                 results.count = c_maxSearchResults;
             for (uint32_t i = 0; i < results.count; i++) {
-                uint64_t nonce = current.startNonce + results.gid[i];
+		uint64_t nonce = current.startNonce + results.rslt[i].gid;
+/*
     ostringstream s;
-    s << "Got header: " << results.hea << "target: " << results.targ;
+    s << "Got solution with as_ulong(as_uchar8(s[0]).s76543210) s[0] from keccak: " << results.rslt[i].sol_hea << " as_ulong(rshift192(w.boundary)): " << results.rslt[i].sol_targ << " as 8 bytes from kejjak: " << std::hex << results.rslt[i].sol_hea << " 8 bytes boundary: " << std::hex  << results.rslt[i].sol_targ;
     cextr << s.str();
-                Farm::f().submitProof(Solution{nonce, h256(), current, chrono::steady_clock::now(), m_index});
-                ReportSolution(current.header, nonce);
+*/
+		if (nonce != m_lastNonce)
+		{
+			m_lastNonce = nonce;
+			Farm::f().submitProof(Solution{nonce, h256(), current, chrono::steady_clock::now(), m_index});
+			ReportSolution(current.header, nonce);
+		}
+
             }
             
             current = w; // kernel now processing newest work

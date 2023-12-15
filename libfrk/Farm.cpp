@@ -353,7 +353,7 @@ void Farm::submitProof(Solution const& _s) {
 void Farm::submitProofAsync(Solution const& _s) {
 
   Result r = FrkhashAux::eval(_s.work.header, _s.nonce);
-  
+
 #ifdef DEV_BUILD
   cnote << "\n";
   cnote << "Debug Info";
@@ -363,13 +363,12 @@ void Farm::submitProofAsync(Solution const& _s) {
   cnote << "MixHash: " << r.mixHash;
   cnote << "Result: " << r.value;
 #endif
-    const uint64_t targ = (uint64_t)(u64)(u256)_s.work.boundary;
-    const uint64_t hea = (uint64_t)(u64)(u256)r.value;
+
     if (r.value > _s.work.boundary) {
-    //if (hea > targ) {
+
         accountSolution(_s.midx, SolutionAccountingEnum::Failed);
-        cwarn << "GPU " << _s.midx << " gave incorrect result: target " << targ << " header" << hea ;
-	stop();
+	cwarn << "GPU " << _s.midx << " gave incorrect result: target " << _s.work.boundary << " header " << r.value ;
+	//stop();
         return;
     }
     m_onSolutionFound(Solution{_s.nonce, r.mixHash, _s.work, _s.tstamp, _s.midx});

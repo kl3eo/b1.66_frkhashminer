@@ -558,12 +558,14 @@ typedef union
 // NOTE: This struct must match the one defined in CLMiner.cpp
 struct SearchResults
 {
+    struct {
+        uint gid;
+        //ulong sol_targ;
+        //ulong sol_hea;
+    } rslt[MAX_OUTPUTS];
     uint count;
     uint hashCount;
-    volatile uint abort;
-    uint gid[MAX_OUTPUTS];
-    ulong targ;
-    ulong hea;
+    uint abort;
 };
 
 //output             = arg 0
@@ -647,9 +649,9 @@ __attribute__((reqd_work_group_size(WORKSIZE, 1, 1))) __kernel void search(
     {
         atomic_inc(&g_output->abort);
         uint slot = min(MAX_OUTPUTS - 1u, atomic_inc(&g_output->count));
-        g_output->gid[slot] = gid;
-	// g_output->sol_targ = target;
-	// g_output->sol_hea = as_long(as_uchar8(state[0]).s76543210);
+        g_output->rslt[slot].gid = gid;
+	//g_output->rslt[slot].sol_targ = target;
+	//g_output->rslt[slot].sol_hea = as_long(as_uchar8(state[0]).s76543210);
     }
 }
 

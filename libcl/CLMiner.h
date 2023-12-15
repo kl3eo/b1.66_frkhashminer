@@ -65,11 +65,6 @@ class CLMiner : public Miner {
     cl::Kernel m_searchKernel;
     cl::Device m_device;
 
-    //cl::Context* m_context = nullptr;
-    //cl::CommandQueue* m_queue = nullptr;
-    //cl::CommandQueue* m_abortqueue = nullptr;
-    //cl::Buffer* m_header = nullptr;
-    //cl::Buffer* m_searchBuffer = nullptr;
     vector<cl::Context> m_context;
     vector<cl::CommandQueue> m_queue;
     vector<cl::CommandQueue> m_abortqueue;
@@ -78,28 +73,7 @@ class CLMiner : public Miner {
 
     void free_buffers() {
         m_abortMutex.lock();
-/*
-        if (m_header) {
-            delete m_header;
-            m_header = nullptr;
-        }
-        if (m_searchBuffer) {
-            delete m_searchBuffer;
-            m_searchBuffer = nullptr;
-        }	
-        if (m_queue) {
-            delete m_queue;
-            m_queue = nullptr;
-        }
-        if (m_abortqueue) {
-            delete m_abortqueue;
-            m_abortqueue = nullptr;
-        }
-        if (m_context) {
-            delete m_context;
-            m_context = nullptr;
-        }
-*/
+
         m_header.clear();
         m_searchBuffer.clear();
         m_queue.clear();
@@ -108,6 +82,8 @@ class CLMiner : public Miner {
     }
 
     std::mutex m_abortMutex;
+    
+    uint64_t m_lastNonce = 0;
 };
 
 } // namespace exp
