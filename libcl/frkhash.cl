@@ -619,7 +619,8 @@ __attribute__((reqd_work_group_size(WORKSIZE, 1, 1))) __kernel void search(
     state[24] = (uint2)(0);
     
     // Process Keccak-512
-    KECCAK_PROCESS_512(state);
+    // KECCAK_PROCESS_512(state);
+    KECCAK_PROCESS(state, 25, 8);
 
     state[8] = as_uint2(0x0000000000000001UL);
     state[9] = (uint2)(0);
@@ -640,7 +641,8 @@ __attribute__((reqd_work_group_size(WORKSIZE, 1, 1))) __kernel void search(
     state[24] = (uint2)(0);
 
     // Process Keccak-256
-    KECCAK_PROCESS_256(state);
+    // KECCAK_PROCESS_256(state);
+    KECCAK_PROCESS(state, 25, 8);
    
     if (get_local_id(0) == 0)
         atomic_inc(&g_output->hashCount);

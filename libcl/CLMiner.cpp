@@ -283,17 +283,13 @@ void CLMiner::workLoop() {
                     if (results.count > c_maxSearchResults) {
                         results.count = c_maxSearchResults;
                     }
-cnote << "RECEIVED RESULTS: " << results.count;
-                    m_queue[0].enqueueReadBuffer(m_searchBuffer[0], CL_TRUE, 0,
-                        results.count * sizeof(results.rslt[0]), (void*)&results);
+                    cnote << "RECEIVED RESULTS: " << results.count;
+                    m_queue[0].enqueueReadBuffer(m_searchBuffer[0], CL_TRUE, 0, results.count * sizeof(results.rslt[0]), (void*)&results);
 
-                    // Reset search buffer if any solution found.
-                    m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE,
-                        offsetof(SearchResults, count), sizeof(results.count), zerox3);                    
+                    // Reset search count if any solution found.
+                    m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE, offsetof(SearchResults, count), sizeof(results.count), zerox3);                    
                 }
-                // clean the solution count, hash count, and abort flag
-                //    m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE,
-                //        offsetof(SearchResults, count), sizeof(zerox3), zerox3);
+                // clean the solution hash count
 		m_queue[0].enqueueWriteBuffer(m_searchBuffer[0], CL_FALSE, offsetof(SearchResults, hashCount), sizeof(results.hashCount), zerox3);
             }
             else
@@ -309,16 +305,13 @@ cnote << "RECEIVED RESULTS: " << results.count;
             }
 
             if (current.header != w.header) {
-                //if (current.epoch != w.epoch) {
-                    //setEpoch(w);
-		    
-		    m_abortqueue.clear();
-                    if (!initEpoch())
-                        break;
-		    m_abortqueue.push_back(cl::CommandQueue(m_context[0], m_device));
-		    
-                    w = work();
-                //}
+
+                m_abortqueue.clear();
+
+                if (!initEpoch())
+                    break;  // This will simply exit the thread
+
+                m_abortqueue.push_back(cl::CommandQueue(m_context[0], m_device));
 
                 startNonce = w.startNonce;
 
