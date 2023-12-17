@@ -560,8 +560,8 @@ struct SearchResults
 {
     struct {
         uint gid;
-        //ulong sol_targ;
-        //ulong sol_hea;
+        //unsigned long long sol_targ;
+        //unsigned long long sol_hea;
     } rslt[MAX_OUTPUTS];
     uint count;
     uint hashCount;

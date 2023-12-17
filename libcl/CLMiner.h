@@ -61,6 +61,7 @@ class CLMiner : public Miner {
   private:
     void workLoop() override;
     bool initEpoch();
+    bool initEpoch_frk(uint32_t);
 
     cl::Kernel m_searchKernel;
     cl::Device m_device;
@@ -82,7 +83,8 @@ class CLMiner : public Miner {
     }
 
     std::mutex m_abortMutex;
-    
+
+    uint32_t nStreams = 1;    
     uint64_t m_lastNonce = 0;
 };
 
