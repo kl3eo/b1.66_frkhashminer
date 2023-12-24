@@ -42,7 +42,7 @@
 #define CL_DEVICE_COMPUTE_CAPABILITY_MINOR_NV 0x4001
 #endif
 
-#define CL_TARGET_BATCH_TIME 0.3F // seconds
+#define CL_TARGET_BATCH_TIME 0.9F // seconds
 
 namespace dev {
 namespace exp {

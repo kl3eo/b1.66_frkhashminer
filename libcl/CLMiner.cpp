@@ -663,7 +663,8 @@ bool CLMiner::initEpoch_frk(uint32_t jj) {
         m_header.clear();
         m_header.push_back(cl::Buffer(m_context[0], CL_MEM_READ_ONLY, 32));
 
-        for (uint32_t j = 0; j < nStreams; j++) m_queue[j].enqueueWriteBuffer(m_searchBuffer[j], CL_FALSE, 0, sizeof(zerox3), zerox3);
+        // for (uint32_t j = 0; j < nStreams; j++) m_queue[j].enqueueWriteBuffer(m_searchBuffer[j], CL_FALSE, 0, sizeof(zerox3), zerox3);
+	m_queue[jj].enqueueWriteBuffer(m_searchBuffer[jj], CL_FALSE, 0, sizeof(zerox3), zerox3);
 
         m_searchKernel.setArg(0, m_searchBuffer[jj]); // Supply output buffer to kernel.
     } catch (cl::Error const& err) {
