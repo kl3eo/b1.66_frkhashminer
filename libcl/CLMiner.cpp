@@ -339,10 +339,15 @@ void CLMiner::workLoop() {
                           << " us.";
 #endif
 
+
             float hr = RetrieveHashRate();
+#ifdef CL_TARGET_BATCH_TIME_DOUBLE
+            if (hr > 1e7)
+                m_block_multiple = uint32_t(hr * CL_TARGET_BATCH_TIME_DOUBLE / m_deviceDescriptor.clGroupSize);
+#else
             if (hr > 1e7)
                 m_block_multiple = uint32_t(hr * CL_TARGET_BATCH_TIME / m_deviceDescriptor.clGroupSize);
-
+#endif
             uint32_t batch_blocks = m_deviceDescriptor.clGroupSize * m_block_multiple;
 
             // Run the kernel.

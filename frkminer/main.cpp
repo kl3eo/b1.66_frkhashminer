@@ -553,6 +553,10 @@ class MinerCLI {
 
                 "Set the work group size, valid values are 64 128 or 256")
 
+            ("cl-double",
+
+                "Use second process of CL miner on the same GPU")
+		
             ("cl-split",
 
                 "Force split-DAG mode. May improve performance on older GPU models.");
@@ -596,6 +600,11 @@ class MinerCLI {
 
             parsed_options parsed = command_line_parser(argc, argv).options(all).allow_unregistered().run();
             store(parsed, vm);
+            if (vm.count("cl-double")) {
+
+#define CL_TARGET_BATCH_TIME_DOUBLE 0.6F
+
+	    }
 
             if (vm.count("config")) {
                 ifstream ifs(vm["config"].as<string>().c_str());
